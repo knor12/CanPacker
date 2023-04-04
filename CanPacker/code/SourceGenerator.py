@@ -61,6 +61,7 @@ class SourceGenerator:
 
             #start of function body
             s+=f'{{\n'
+            s+=f'    (void)ID; /*not used for now*/\n\n'
             #define variable for easy manip
             s+=f'    uint64_t * pU64Data = (uint64_t *)(pU8Data);\n\n'
 
@@ -72,12 +73,12 @@ class SourceGenerator:
                 #pack the signal
                 s+=f'\n    /*packing {signal.name}*/\n'
                 if signal.isConstant:
-                    s+=f'    *pU64Data = (*pU64Data ) | (uint64_t)((({signal.constantValue}&{self.getMaskFromBitLegth(signal.bitLength)}))<<{signal.startbitAbsolue});\n'
+                    s+=f'    *pU64Data = (*pU64Data ) | (((uint64_t)({signal.constantValue}&{self.getMaskFromBitLegth(signal.bitLength)}))<<{signal.startbitAbsolue});\n'
                 
                 elif signal.getter != "":
-                    s+=f'    *pU64Data = (*pU64Data ) | (uint64_t)((({signal.getter}())& {self.getMaskFromBitLegth(signal.bitLength)})<<{signal.startbitAbsolue});\n'
+                    s+=f'    *pU64Data = (*pU64Data ) | (((uint64_t)({signal.getter}())& {self.getMaskFromBitLegth(signal.bitLength)})<<{signal.startbitAbsolue});\n'
                 else: 
-                    s+=f'        *pU64Data = (*pU64Data ) | (uint64_t)((({signal.name})& {self.getMaskFromBitLegth(signal.bitLength)})<<{signal.startbitAbsolue});\n'
+                    s+=f'     *pU64Data = (*pU64Data ) | (((uint64_t)({signal.name})& {self.getMaskFromBitLegth(signal.bitLength)})<<{signal.startbitAbsolue});\n'
         
             s+=f'    return true;\n'
             #end of function body

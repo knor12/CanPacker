@@ -9,6 +9,7 @@ from ModelFrame import *
 from ModelSignal import *
 from ModelBuilder  import *
 from Utilities import *
+from ModelChecker import *
 import sys
 import os
 from pathlib import Path
@@ -49,6 +50,12 @@ if __name__ == "__main__":
     #print the model built
     model = modelBuilder.model
     print (f'{model}')
+
+    #check the sanity of the model
+    modelChecker = ModelChecker(model)
+    if not modelChecker.check():
+        print (f'{modelChecker}')
+        exit()
 
     #print the header file
     headerGenerator = HeaderGenerator(model); 

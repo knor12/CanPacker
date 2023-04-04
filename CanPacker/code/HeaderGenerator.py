@@ -52,8 +52,12 @@ class HeaderGenerator:
         for enumType in self.model.enumTypes:
             s+= f"typedef enum \n"
             s+= f"{{\n"
+            
             for enumItem in enumType.enumItems: 
-                s+= f"    {enumItem.name} = {enumItem.value},\n"
+                comment = ""
+                if enumItem.comment !="":
+                    comment = f"/*{enumItem.comment}*/"
+                s+= f"    {enumItem.name} = {enumItem.value},{comment}\n"
 
             s+= f"\n}} {enumType.typeName};\n"
 
