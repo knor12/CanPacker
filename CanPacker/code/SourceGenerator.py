@@ -127,6 +127,9 @@ class SourceGenerator:
 
             #start of function body
             s+=f'{{\n'
+            #check for valid input
+            s+=f'    /*nothing to do if invalid data pointer provided*/\n'
+            s+=f'    if (pU8Data==0){{return false;}}\n\n'
             #define variable for easy manip
             s+=f'    uint64_t * pU64Data = (uint64_t *)(pU8Data);\n\n'
 
@@ -137,19 +140,19 @@ class SourceGenerator:
             for index, signal in enumerate(frame.signals) : 
                 #unpack the signal
                 s+=f'\n    /*unpacking {signal.name}*/\n'
-                s+=f'    {signal.dataType} {signal.name}_ = \
+                s+=f'    {signal.dataType} _{signal.name} = \
 ({signal.dataType})(((* pU64Data)>>{signal.startbitAbsolue})&{self.getMaskFromBitLegth(signal.bitLength)}); \n'
                 
                 #what to do with it
                 #check if constant value is good
                 if signal.isConstant:
-                    s+=f'    if({signal.name}_!={signal.constantValue}){{return false;}}\n'
+                    s+=f'    if(_{signal.name}!={signal.constantValue}){{return false;}}\n'
                 
                 #check if we have a setter
                 if signal.setter != "":
-                    s+=f'    {signal.setter}({signal.name}_);\n'
+                    s+=f'    {signal.setter}(_{signal.name});\n'
                 elif not signal.isConstant: 
-                    s+=f'    if ({signal.name} !=0){{* {signal.name} = {signal.name}_;}} \n'
+                    s+=f'    if ({signal.name} !=0){{* {signal.name} = _{signal.name};}} \n'
 
 
             s+=f'    return true;\n'
