@@ -63,7 +63,10 @@ class SourceGenerator:
             s+=f'{{\n'
             s+=f'    (void)ID; /*not used for now*/\n\n'
             #define variable for easy manip
-            s+=f'    uint64_t * pU64Data = (uint64_t *)(pU8Data);\n\n'
+            s+=f'    /*nothing to do if invalid data pointer provided*/\n'
+            s+=f'    if (pU8Data==0){{return false;}}\n\n'
+            s+=f'    uint64_t * pU64Data = (uint64_t *)(pU8Data);\n'
+            s+=f'    * pU64Data = 0u;\n\n'
 
             #check if the CAN ID is correct
             #s+= f'    /*check ID match*/ \n'

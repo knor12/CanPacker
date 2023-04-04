@@ -10,6 +10,7 @@ from ModelSignal import *
 from ModelBuilder  import *
 from Utilities import *
 from ModelChecker import *
+from GlueHeaderGenerator import *
 import sys
 import os
 from pathlib import Path
@@ -68,8 +69,16 @@ if __name__ == "__main__":
     sSource = sourceGenerator.getSourceFile()
     print(f'{sSource}')
 
+    glueHeaderGenerator= GlueHeaderGenerator(model)
+    sGlue = glueHeaderGenerator.getHeaderFile()
+    print(f'{sGlue}')
+
     utilities =Utilities() 
     utilities.writeFile(fileName=f'{model.name}.h', content=sHeader)
     utilities.writeFile(fileName=f'{model.name}.c', content=sSource)
+
+    if not os.path.exists(f'{model.name}_glue.h'): 
+        utilities.writeFile(fileName=f'{model.name}_glue.h', content=sGlue)
+
 
     
