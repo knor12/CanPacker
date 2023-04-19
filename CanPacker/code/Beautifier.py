@@ -22,7 +22,8 @@ class Beautifier:
         
         ret = os.system(cmd)
         if (ret== 0):
-            print (f'{filePath} formated ok')
+            print (f'{filePath} formated OK')
+            os.remove(f'{filePath}.orig')
         else:
             print (f'{filePath} error formatting ')
             
