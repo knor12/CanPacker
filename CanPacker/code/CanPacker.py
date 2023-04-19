@@ -11,6 +11,7 @@ from ModelBuilder  import *
 from Utilities import *
 from ModelChecker import *
 from GlueHeaderGenerator import *
+from Beautifier import *
 import sys
 import os
 from pathlib import Path
@@ -69,16 +70,26 @@ if __name__ == "__main__":
     sSource = sourceGenerator.getSourceFile()
     print(f'{sSource}')
 
-    glueHeaderGenerator= GlueHeaderGenerator(model)
-    sGlue = glueHeaderGenerator.getHeaderFile()
-    print(f'{sGlue}')
+    
+    #create the beautifier object
+    beautifier = Beautifier()
 
     utilities =Utilities() 
     utilities.writeFile(fileName=f'{model.name}.h', content=sHeader)
+    beautifier.beatify(filePath=f'{model.name}.h')
     utilities.writeFile(fileName=f'{model.name}.c', content=sSource)
+    beautifier.beatify(filePath=f'{model.name}.c')
+    
+
+    
+    
 
     if not os.path.exists(f'{model.name}_glue.h'): 
+        glueHeaderGenerator= GlueHeaderGenerator(model)
+        sGlue = glueHeaderGenerator.getHeaderFile()
+        print(f'{sGlue}')
         utilities.writeFile(fileName=f'{model.name}_glue.h', content=sGlue)
+        beautifier.beatify(filePath=f'{model.name}_glue.h')
 
 
     
