@@ -95,6 +95,7 @@ class SourceGenerator:
                 old_frame = f'u64{frame.name}_old_data'
                 now_frame = f'u64{frame.name}_now_data'
                 ID = f'{frame.ID}'
+                dataLength = f'{frame.dataLength}'
                 s+=f'/**send frame {frame.name} on change.**/\n' 
                 s+=f'static uint64_t {old_frame} = 0;\n'
                 s+=f'uint64_t {now_frame}  = 0;\n'
@@ -104,7 +105,7 @@ class SourceGenerator:
                 s+=f'if ({old_frame} != {now_frame})\n'
                 s+='{\n'
                 s+=f'    /*send the frame*/\n'
-                s+=f'    {self.model.name}_sendFrame({ID}, (uint8_t *) (&{now_frame}));\n'
+                s+=f'    {self.model.name}_sendFrame({ID}, (uint8_t *) (&{now_frame}), {dataLength}, false);\n'
                 s+=f'    /*save copy of data sent.*/\n'
                 s+=f'    {old_frame} = {now_frame};\n'
                 s+='}\n'
@@ -170,8 +171,17 @@ class SourceGenerator:
             #define variable for easy manip
             s+=f'    /*nothing to do if invalid data pointer provided*/\n'
             s+=f'    if (pU8Data==0){{return false;}}\n\n'
-            s+=f'    uint64_t * pU64Data = (uint64_t *)(pU8Data);\n'
-            s+=f'    * pU64Data = 0u;\n\n'
+            #identify a proper type before manipulating the frame data
+            dataType = 'uint8_t'
+            if frame.dataLength >1: 
+                dataType = 'uint16_t'
+            if frame.dataLength >2: 
+                dataType = 'uint32_t'
+            if frame.dataLength >4: 
+                dataType = 'uint64_t'
+                
+            s+=f'    {dataType} * pData = ({dataType} *)(pU8Data);\n'
+            s+=f'    * pData = 0u;\n\n'
 
             #check if the CAN ID is correct
             #s+= f'    /*check ID match*/ \n'
@@ -181,12 +191,12 @@ class SourceGenerator:
                 #pack the signal
                 s+=f'\n    /*packing {signal.name}*/\n'
                 if signal.isConstant:
-                    s+=f'    *pU64Data = (*pU64Data ) | (((uint64_t)({signal.constantValue}&{self.getMaskFromBitLegth(signal.bitLength)}))<<{signal.startbitAbsolue});\n'
+                    s+=f'    *pData = (*pData ) | (((uint64_t)({signal.constantValue}&{self.getMaskFromBitLegth(signal.bitLength)}))<<{signal.startbitAbsolue});\n'
                 
                 elif signal.getter != "":
-                    s+=f'    *pU64Data = (*pU64Data ) | (((uint64_t)({signal.getter}())& {self.getMaskFromBitLegth(signal.bitLength)})<<{signal.startbitAbsolue});\n'
+                    s+=f'    *pData = (*pData ) | ((({dataType})({signal.getter}())& {self.getMaskFromBitLegth(signal.bitLength)})<<{signal.startbitAbsolue});\n'
                 else: 
-                    s+=f'     *pU64Data = (*pU64Data ) | (((uint64_t)({signal.name})& {self.getMaskFromBitLegth(signal.bitLength)})<<{signal.startbitAbsolue});\n'
+                    s+=f'     *pData = (*pData ) | ((({dataType})({signal.name})& {self.getMaskFromBitLegth(signal.bitLength)})<<{signal.startbitAbsolue});\n'
         
             s+=f'    return true;\n'
             #end of function body
@@ -240,7 +250,12 @@ class SourceGenerator:
 
             #check if the CAN ID is correct
             s+= f'    /*check ID match*/ \n'
-            s+= f'    if ({frame.ID} != ID){{return false;}} \n'
+            if ('(' in frame.ID) and (')' in frame.ID ):#if an expression is used put it as is  
+                s+=f'    if (!({frame.ID})){{return false;}} \n'
+            elif frame.ID =='': #no frame ID specified
+                pass 
+            else: #frame value specified
+                s+= f'    if ({frame.ID} != ID){{return false;}} \n'
 
             for index, signal in enumerate(frame.signals) : 
                 #unpack the signal

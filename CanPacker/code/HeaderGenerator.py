@@ -35,7 +35,7 @@ class HeaderGenerator:
             s+=f'/*user defined function return ticks elapsed in milliseconds since stampMs*/\n'
             s+=f'extern uint32_t {getTickSince}(uint32_t stampMs);\n\n'
             s+=f'/*user defined function that sends frames over the can bus */\n'
-            s+=f'extern bool {sendFrame}(uint32_t id, uint8_t * pData);\n\n'
+            s+=f'extern bool {sendFrame}(uint32_t id, uint8_t * pData, uint8_t dataLength, bool isRemote);\n\n'
 
             s+='/*call this function cyclically to send out:\n\t-cyclic frames,\n\t-frames that are sent out when changed */\n'
             s+=f'void {self.model.name}_cyclic(void);'
