@@ -41,6 +41,7 @@ class HeaderGenerator:
             s+=f'void {self.model.name}_cyclic(void);'
             s +="\n\n"
         if self.model.rx_function:
+            s+= "/*feed incoming frames to this function for processing*/\n"
             s+=f'void {self.model.name}_parse(uint32_t id , uint8_t * pData);'
             s +="\n\n"
         s += self.getEnumerations()

@@ -57,7 +57,6 @@ class SourceGenerator:
                         exit (-1) 
         
         s+= "\n\n"
-        s+= "/*feed incoming frames to this function for processing*/\n"
         s+=f'void {self.model.name}_parse(uint32_t id , uint8_t * pData)'
         s+='{'
         for frame in self.model.frames:
@@ -112,7 +111,7 @@ class SourceGenerator:
 
         #process cyclic functions
         for frame in self.model.frames: 
-            counter = f'{frame.name}_counter'
+            counter = f'{frame.name}_counterMs'
             now_frame = f'u64{frame.name}_now_data'
             ID = f'{frame.ID}'
             if frame.cyclicity != 0:
@@ -125,15 +124,15 @@ class SourceGenerator:
                 s+=f'/*define a counter*/\n'
                 s+=f'static uint32_t {counter} = 0;\n'
                 s+=f'/*initialize the counter*/\n'
-                s+=f'if ({counter}==0){{{counter} = {getTick}(); }}'
+                s+=f'if ({counter}==0){{{counter} = {getTick}(); }}\n'
                 s+='/*see if the time is up for sendig the frame.*/\n'
                 s+=f'if ({frame.cyclicity} <= {getTickSince}({counter}))'
-                s+='{'
-                s+='/*pack the frame to be sent*/\n'
+                s+='{\n'
                 s+=f'uint64_t {now_frame}  = 0;\n'
+                s+='/*pack the frame to be sent*/\n'
                 s+=f'{frame.name}_pack( {ID}, (uint8_t *)(&{now_frame}));\n'
                 s+='/*send the frame*/\n'
-                s+=f'{sendFrame}({ID}, (uint8_t *) (&{now_frame}));' 
+                s+=f'{sendFrame}({ID}, (uint8_t *) (&{now_frame}));\n' 
                 s+='/*reset the counter for next iteration*/\n'
                 s+=f'{counter} = {getTick}(); '
                 s+='}'

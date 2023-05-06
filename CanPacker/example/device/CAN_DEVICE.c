@@ -173,21 +173,24 @@ void CAN_DEVICE_cyclic(void)
 
     /**send frame HEALTH cyclically.**/
     /*define a counter*/
-    static uint32_t HEALTH_counter = 0;
+    static uint32_t HEALTH_counterMs = 0;
 
     /*initialize the counter*/
-    if (HEALTH_counter==0)
+    if (HEALTH_counterMs==0)
     {
-        HEALTH_counter = CAN_DEVICE_ticksMs();    /*see if the time is up for sendig the frame.*/
+        HEALTH_counterMs = CAN_DEVICE_ticksMs();
     }
 
-    if (10 <= CAN_DEVICE_ticksSince(HEALTH_counter)) /*pack the frame to be sent*/
+    /*see if the time is up for sendig the frame.*/
+    if (10 <= CAN_DEVICE_ticksSince(HEALTH_counterMs))
     {
         uint64_t u64HEALTH_now_data  = 0;
+        /*pack the frame to be sent*/
         HEALTH_pack( 10, (uint8_t *)(&u64HEALTH_now_data));
         /*send the frame*/
-        CAN_DEVICE_sendFrame(10, (uint8_t *) (&u64HEALTH_now_data));/*reset the counter for next iteration*/
-        HEALTH_counter = CAN_DEVICE_ticksMs();
+        CAN_DEVICE_sendFrame(10, (uint8_t *) (&u64HEALTH_now_data));
+        /*reset the counter for next iteration*/
+        HEALTH_counterMs = CAN_DEVICE_ticksMs();
     }
 }
 
@@ -195,7 +198,6 @@ void CAN_DEVICE_cyclic(void)
 
 
 
-/*feed incoming frames to this function for processing*/
 void CAN_DEVICE_parse(uint32_t id, uint8_t * pData)
 {
     if(10==id)

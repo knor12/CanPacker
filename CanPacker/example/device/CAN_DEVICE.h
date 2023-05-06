@@ -37,6 +37,7 @@ extern bool CAN_DEVICE_sendFrame(uint32_t id, uint8_t * pData);
 	-frames that are sent out when changed */
 void CAN_DEVICE_cyclic(void);
 
+/*feed incoming frames to this function for processing*/
 void CAN_DEVICE_parse(uint32_t id, uint8_t * pData);
 
 typedef enum
