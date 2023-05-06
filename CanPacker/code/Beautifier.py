@@ -1,3 +1,7 @@
+__author__      = "Noreddine Kessa"
+__copyright__   = "!"
+__license__ = "MIT License"
+
 import os
 from os.path import exists
 
