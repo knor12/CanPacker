@@ -18,6 +18,8 @@ class ModelFrame:
         self.comment = ""
         self.signals=[]
         self.utilities 	= Utilities()
+        self.cyclicity = 0
+        self.tx_on_change = False
 
     def __str__(self):
         
@@ -74,6 +76,9 @@ class ModelFrame:
                 self.isRx = True
             else : 
                 self.isRx = False
+            
+            if 'TX_ON_CHANGE' in direction.upper(): 
+                self.tx_on_change = True
 
             #process data length
             dataLength = words[4]
@@ -84,6 +89,10 @@ class ModelFrame:
 
             #process comment
             self.comment = words[5]
+
+            #process cyclicity
+            if words[6].isnumeric():
+                self.cyclicity = int(words[6]); 
 
             return True
         

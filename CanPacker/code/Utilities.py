@@ -9,7 +9,7 @@ class Utilities:
     def __init__(self, name=""):
         self.name = name
         self.toolName = "CanPacker"
-        self.version = "V0.05"
+        self.version = "V0.06"
 
  
     

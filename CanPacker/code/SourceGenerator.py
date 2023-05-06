@@ -24,8 +24,12 @@ class SourceGenerator:
         s +="\n\n"
         s +="\n\n"
         s +=self.getPackersC()
+        s +="\n\n"
         s +=self.getUnPackersC()
         s +="\n\n"
+        s+=self.getCyclicFunction(); 
+        s +="\n\n"
+        s+=self.getParserFunction();
         s +="\n\n"
         s += self.CPPGuardEnd
         return s
@@ -37,6 +41,108 @@ class SourceGenerator:
             s+= f'\n{line}'
         return s
     
+
+    def getParserFunction(self): 
+        s=""
+        if not self.model.rx_function:
+            return s
+        
+        #process variables that parsed
+        for frame in self.model.frames: 
+            if frame.isRX:
+                #setters need to be defined signals in frames defined as RX frames
+                for signal in frame.signals: 
+                    if signal.setter == "" and not signal.isConstant:
+                        print(f'error signal {signal.name} in frame {frame.name} is an rx signal but doesnt have a setter' ); 
+                        exit (-1) 
+        
+        s+= "\n\n"
+        s+= "/*feed incoming frames to this function for processing*/\n"
+        s+=f'void {self.model.name}_parse(uint32_t id , uint8_t * pData)'
+        s+='{'
+        for frame in self.model.frames:
+            fID = frame.ID 
+            unpack = f'{frame.name}_unpack' #(\n    const uint32_t ID, \n    const uint8_t * pU8Data'
+            if frame.isRX:
+                s+= f'if({fID}==id){{ {unpack}(id, pData);  }}' 
+        
+        s+='}'
+        return s
+
+    def getCyclicFunction(self): 
+        s=""
+        if not self.model.tx_function:
+            return s
+        
+
+        #global function names
+        getTick = f'{self.model.name}_ticksMs'; 
+        getTickSince = f'{self.model.name}_ticksSince'
+        sendFrame = f'{self.model.name}_sendFrame'
+
+        s+= "\n\n"
+        s+= f'void {self.model.name}_cyclic(void)\n'
+        s+='{\n'
+        
+        #process variables that are sent on change
+        for frame in self.model.frames: 
+            if frame.tx_on_change:
+                #getters need to be defined for all frames sent on change
+                for signal in frame.signals: 
+                    if signal.getter == "" and not signal.isConstant:
+                        print(f'error signal {signal.name} in frame {frame.name} is a sent on change frame but doesnt have a getter' ); 
+                        exit (-1) 
+
+                old_frame = f'u64{frame.name}_old_data'
+                now_frame = f'u64{frame.name}_now_data'
+                ID = f'{frame.ID}'
+                s+=f'/**send frame {frame.name} on change.**/\n' 
+                s+=f'static uint64_t {old_frame} = 0;\n'
+                s+=f'uint64_t {now_frame}  = 0;\n'
+                s+='/*built the new frame*/\n'
+                s+=f'{frame.name}_pack( {ID}, (uint8_t *)(&{now_frame}));\n'
+                s+='/*see if frame has changed*/\n'
+                s+=f'if ({old_frame} != {now_frame})\n'
+                s+='{\n'
+                s+=f'    /*send the frame*/\n'
+                s+=f'    {self.model.name}_sendFrame({ID}, (uint8_t *) (&{now_frame}));\n'
+                s+=f'    /*save copy of data sent.*/\n'
+                s+=f'    {old_frame} = {now_frame};\n'
+                s+='}\n'
+
+        #process cyclic functions
+        for frame in self.model.frames: 
+            counter = f'{frame.name}_counter'
+            now_frame = f'u64{frame.name}_now_data'
+            ID = f'{frame.ID}'
+            if frame.cyclicity != 0:
+                #getters need to be defined for all frames sent cyclicaly
+                for signal in frame.signals: 
+                    if signal.getter == "" and not signal.isConstant:
+                        print(f'error signal {signal.name} in frame {frame.name} is in a cyclical frame but doesnt have a getter' ); 
+                        exit (-1)
+                s+=f'/**send frame {frame.name} cyclically.**/\n' 
+                s+=f'/*define a counter*/\n'
+                s+=f'static uint32_t {counter} = 0;\n'
+                s+=f'/*initialize the counter*/\n'
+                s+=f'if ({counter}==0){{{counter} = {getTick}(); }}'
+                s+='/*see if the time is up for sendig the frame.*/\n'
+                s+=f'if ({frame.cyclicity} <= {getTickSince}({counter}))'
+                s+='{'
+                s+='/*pack the frame to be sent*/\n'
+                s+=f'uint64_t {now_frame}  = 0;\n'
+                s+=f'{frame.name}_pack( {ID}, (uint8_t *)(&{now_frame}));\n'
+                s+='/*send the frame*/\n'
+                s+=f'{sendFrame}({ID}, (uint8_t *) (&{now_frame}));' 
+                s+='/*reset the counter for next iteration*/\n'
+                s+=f'{counter} = {getTick}(); '
+                s+='}'
+
+
+        s+='}\n\n'
+        return s 
+    
+
     def getPackersC(self):
         s="\n"
         for frame in self.model.frames: 
@@ -159,6 +265,9 @@ class SourceGenerator:
             #end of function body
             s+=f'}}'
         return s
+    
+
+
             
 
 

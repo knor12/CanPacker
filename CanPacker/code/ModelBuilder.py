@@ -37,7 +37,7 @@ class ModelBuilder:
             words = line.split(",")
             #process two words lines
             if len (words) >=2:
-                if (words[0]=="$NAME"):
+                if (words[0]=="$NAME" or words[0]=="$TX_FUNCTION" or words[0]=="$RX_FUNCTION" ):
                     if not model.acceptLine(line): 
                         print(f'error in line "{line}"')
                         return False

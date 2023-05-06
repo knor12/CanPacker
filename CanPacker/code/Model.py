@@ -18,6 +18,8 @@ class Model:
         self.enumTypes=[]
         self.utilities = Utilities()
         self.sourceFile = ""
+        self.tx_function = False
+        self.rx_function = False
 
     def acceptLine(self , line): 
         words = line.split(",")  
@@ -25,13 +27,21 @@ class Model:
             if (words[0]=="$NAME"):
                 self.name = words[1]
                 return True
+            elif (words[0]=="$TX_FUNCTION"):
+                if "TRUE" in words[1].upper():
+                    self.tx_function = True
+                    return True
+            elif (words[0]=="$RX_FUNCTION"):
+                if "TRUE" in words[1].upper():
+                    self.rx_function = True
+                    return True          
 
-        return False   
+        return True   
     
 
 
     def __str__(self):
-        s = f'model name : {self.name}, source file:{self.sourceFile}\n'
+        s = f'model name : {self.name}, source file:{self.sourceFile}, tx_function={self.tx_function}, rx_function={self.rx_function}\n'
         
         s += f'model frames\n'
         sFrames = ""

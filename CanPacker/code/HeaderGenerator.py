@@ -26,6 +26,23 @@ class HeaderGenerator:
         s+= f'#include "{self.model.name}_glue.h"\n'
         s += self.getIncludesH()
         s +="\n\n"
+        if self.model.tx_function:
+            getTick = f'{self.model.name}_ticksMs'; 
+            getTickSince = f'{self.model.name}_ticksSince'
+            sendFrame = f'{self.model.name}_sendFrame'
+            s+=f'/*user defined function return ticks elapsed in milliseconds since start of program execution */\n'
+            s+=f'extern uint32_t {getTick}(void);\n\n'
+            s+=f'/*user defined function return ticks elapsed in milliseconds since stampMs*/\n'
+            s+=f'extern uint32_t {getTickSince}(uint32_t stampMs);\n\n'
+            s+=f'/*user defined function that sends frames over the can bus */\n'
+            s+=f'extern bool {sendFrame}(uint32_t id, uint8_t * pData);\n\n'
+
+            s+='/*call this function cyclically to send out:\n\t-cyclic frames,\n\t-frames that are sent out when changed */\n'
+            s+=f'void {self.model.name}_cyclic(void);'
+            s +="\n\n"
+        if self.model.rx_function:
+            s+=f'void {self.model.name}_parse(uint32_t id , uint8_t * pData);'
+            s +="\n\n"
         s += self.getEnumerations()
         s +="\n\n"
         s +="\n\n"
