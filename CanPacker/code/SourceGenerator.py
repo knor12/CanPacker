@@ -257,8 +257,25 @@ class SourceGenerator:
             else: #frame value specified
                 s+= f'    if ({frame.ID} != ID){{return false;}} \n'
 
+            #check if all constants match what is exprected
+            for index, signal in enumerate(frame.signals) : 
+                #check if constant value is good
+                if not signal.isConstant:
+                    continue
+                s+=f'\n    /*unpacking {signal.name}*/\n'
+                s+=f'    {signal.dataType} _{signal.name} = \
+({signal.dataType})(((* pU64Data)>>{signal.startbitAbsolue})&{self.getMaskFromBitLegth(signal.bitLength)}); \n'
+                    #return if the constant is not what is exprected
+                s+=f'    if(_{signal.name}!={signal.constantValue}){{return false;}}\n'
+                #check if we have a setter
+                if signal.setter != "":
+                    s+=f'    {signal.setter}(_{signal.name});\n'
+
+            #unpack signals non constants
             for index, signal in enumerate(frame.signals) : 
                 #unpack the signal
+                if  signal.isConstant:
+                    continue
                 s+=f'\n    /*unpacking {signal.name}*/\n'
                 s+=f'    {signal.dataType} _{signal.name} = \
 ({signal.dataType})(((* pU64Data)>>{signal.startbitAbsolue})&{self.getMaskFromBitLegth(signal.bitLength)}); \n'
@@ -266,7 +283,7 @@ class SourceGenerator:
                 #what to do with it
                 #check if constant value is good
                 if signal.isConstant:
-                    s+=f'    if(_{signal.name}!={signal.constantValue}){{return false;}}\n'
+                    pass #
                 
                 #check if we have a setter
                 if signal.setter != "":
