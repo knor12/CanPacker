@@ -49,7 +49,7 @@ class SourceGenerator:
         
         #process variables that parsed
         for frame in self.model.frames: 
-            if frame.isRX:
+            if frame.isRx:
                 #setters need to be defined signals in frames defined as RX frames
                 for signal in frame.signals: 
                     if signal.setter == "" and not signal.isConstant:
@@ -57,14 +57,15 @@ class SourceGenerator:
                         exit (-1) 
         
         s+= "\n\n"
-        s+=f'void {self.model.name}_parse(uint32_t id , uint8_t * pData)'
+        s+=f'void {self.model.name}_parse(uint32_t ID , uint8_t * pData)'
         s+='{'
         for frame in self.model.frames:
             fID = frame.ID 
             unpack = f'{frame.name}_unpack' #(\n    const uint32_t ID, \n    const uint8_t * pU8Data'
-            if frame.isRX:
-                s+= f'if({fID}==id){{ {unpack}(id, pData);  }}' 
+            if frame.isRx:
+                s+= f'if({unpack}(id, pData)){{return 1;}}' 
         
+        s+='return 0;'
         s+='}'
         return s
 

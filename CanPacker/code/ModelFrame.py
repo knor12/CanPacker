@@ -12,8 +12,8 @@ class ModelFrame:
     def __init__(self, name=""):
         self.name =name
         self.ID = 0
-        self.isTx = True
-        self.isRX = True
+        self.isTx = False
+        self.isRx = False
         self.dataLength = 8
         self.comment = ""
         self.signals=[]
@@ -23,7 +23,7 @@ class ModelFrame:
 
     def __str__(self):
         
-        s = f'frame name :  {self.name}, ID {self.ID}, isTx {self.isTx}, isRX {self.isRX}, dataLength {self.dataLength}, comment {self.comment}.\n'
+        s = f'frame name :  {self.name}, ID {self.ID}, isTx {self.isTx}, isRx {self.isRx}, dataLength {self.dataLength}, comment {self.comment}.\n'
         for signal in self.signals:
             s += self.utilities.indent(f'\t{signal}\n', 4)
         return s
